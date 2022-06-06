@@ -10,6 +10,7 @@ import PageTitle from "../components/PageTitle";
 import { useForm } from "react-hook-form";
 import { useMutation, gql } from "@apollo/client";
 import FormError from "../components/auth/FormError";
+import { useNavigate } from "react-router-dom";
 
 const HeaderContainer = styled.div`
   display: flex;
@@ -28,10 +29,10 @@ const CREATE_ACCOUNT_MUTATION = gql`
     $username: String!
     $email: String!
     $name: String!
-    $location: String
+    $location: String!
     $password: String!
-    $avatarURL: String
-    $githubUsername: String
+    $avatarURL: String!
+    $githubUsername: String!
   ) {
     createAccount(
       username: $username
@@ -48,21 +49,24 @@ const CREATE_ACCOUNT_MUTATION = gql`
 `;
 
 function SignUp() {
-  const onCompleted = (data) => {
-    const {
-      createAccount: { id },
-    } = data;
-    if (!id) {
-      return setError("result", { message: "Do Not Make Account" });
-    } else {
-      console.log(id);
-    }
-  };
-
+  const navigate = useNavigate();
   const { register, handleSubmit, errors, formState, setError, getValues } =
     useForm({
       mode: "onChange",
     });
+
+  const onCompleted = (data) => {
+    const { username, password } = getValues();
+    const {
+      createAccount: { id },
+    } = data;
+    if (!id) {
+      return;
+    }
+    navigate(routes.home, {
+      state: { message: "Account created. Please log in.", username, password },
+    });
+  };
 
   const [createAccount, { loading }] = useMutation(CREATE_ACCOUNT_MUTATION, {
     onCompleted,
@@ -76,9 +80,9 @@ function SignUp() {
       variables: {
         username,
         name,
-        githubUsername: "empty",
-        avatarURL: "empty",
-        location: "empty",
+        githubUsername: "",
+        avatarURL: "",
+        location: "",
         password,
         email,
       },
@@ -108,9 +112,14 @@ function SignUp() {
             placeholder="Name"
             hasError={Boolean(formState.errors?.name?.message)}
           />
-
           <Input
-            {...register("username", { required: "Username is required." })}
+            {...register("username", {
+              required: "Username is required.",
+              minLength: {
+                value: 3,
+                message: "Username should be longer than 3 chars.",
+              },
+            })}
             type="text"
             placeholder="Username"
             hasError={Boolean(formState.errors?.username?.message)}
@@ -121,6 +130,7 @@ function SignUp() {
             placeholder="Password"
             hasError={Boolean(formState.errors?.password?.message)}
           />
+          <FormError message={formState.errors?.username?.message} />
           <FormError message={formState.errors?.result?.message} />
           <Button
             type="submit"
