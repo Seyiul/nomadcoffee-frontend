@@ -43,7 +43,7 @@ function Home() {
     <HomeLayout>
       <div>
         {data?.seeCoffeeShops?.map((shop) => (
-          <Container>
+          <Container key={shop.id}>
             <Link to={`shop/${shop.id}`} state={{ id: shop.id }}>
               <List>
                 <span>{shop.name}</span>

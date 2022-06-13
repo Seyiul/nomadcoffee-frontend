@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { isLoggedInVar, logUserOut } from "../apollo";
 import routes from "../routes";
+import useUser from "../hooks/useUser";
 
 const SHeader = styled.header`
   width: 100%;

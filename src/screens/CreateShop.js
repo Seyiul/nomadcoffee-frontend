@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import routes from "../routes";
 import FormError from "../components/auth/FormError";
+import useUser from "../hooks/useUser";
 
 const HeaderContainer = styled.div`
   display: flex;
@@ -37,7 +38,8 @@ const CREATE_COFFEE_SHOP = gql`
       file: $file
       categories: $categories
     ) {
-      id
+      ok
+      error
     }
   }
 `;
@@ -50,12 +52,12 @@ function CreateShop() {
 
   const onCompleted = (data) => {
     const {
-      createCoffeeShop: { id },
+      createCoffeeShop: { ok, error },
     } = data;
-    if (!id) {
+    console.log(ok, error);
+    if (!ok) {
       return;
     }
-    console.log(id);
     navigate(routes.home);
   };
   const [createCoffeeShop, { loading }] = useMutation(CREATE_COFFEE_SHOP, {
@@ -67,7 +69,6 @@ function CreateShop() {
       return;
     }
     const data = getValues();
-    console.log(data);
     createCoffeeShop({
       variables: {
         ...data,
