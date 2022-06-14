@@ -1,6 +1,9 @@
 import { gql, useQuery } from "@apollo/client";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import useUser from "../hooks/useUser";
+import { useMutation } from "@apollo/client/react";
+import routes from "../routes";
 
 const Title = styled.h1`
   color: ${(props) => props.theme.green};
@@ -23,7 +26,7 @@ const Wrapper = styled.div`
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  width: 90%;
+  width: 50%;
   padding: 50px;
   text-align: center;
   background-color: ${(props) => props.theme.bgColor};
@@ -54,6 +57,26 @@ const Categories = styled.div`
   }
 `;
 
+const ButtonWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  align-items: center;
+`;
+
+const Btn = styled.button`
+  border: none;
+  margin-top: 10px;
+  background-color: tomato;
+  color: white;
+  text-align: center;
+  padding: 8px 0px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  opacity: ${(props) => (props.disabled ? "0.3" : "1")};
+`;
+
 const SEE_COFFEESHOP = gql`
   query seeCoffeeShop($id: Int!) {
     seeCoffeeShop(id: $id) {
@@ -62,6 +85,7 @@ const SEE_COFFEESHOP = gql`
       latitude
       longitude
       user {
+        id
         name
       }
       photos {
@@ -74,14 +98,31 @@ const SEE_COFFEESHOP = gql`
   }
 `;
 
+const DELETE_COFFEESHOP = gql`
+  mutation deleteCoffeeShop($id: Int!) {
+    deleteCoffeeShop(id: $id) {
+      ok
+      error
+    }
+  }
+`;
+
 function Details() {
   const location = useLocation();
+  const loggedInUser = useUser();
+  const navigate = useNavigate();
 
   const { loading, error, data } = useQuery(SEE_COFFEESHOP, {
     variables: { id: location?.state?.id },
   });
 
-  console.log(data);
+  const [deleteCoffeeShop] = useMutation(DELETE_COFFEESHOP);
+
+  const deleteShop = () => {
+    const ShopId = data?.seeCoffeeShop?.id;
+    deleteCoffeeShop({ variables: { id: ShopId } });
+    navigate(routes.home);
+  };
 
   return (
     <Container>
@@ -106,6 +147,11 @@ function Details() {
             <span>{category.name}</span>
           ))}
         </Categories>
+        {loggedInUser?.data?.me?.id === data?.seeCoffeeShop?.user?.id ? (
+          <ButtonWrapper>
+            <Btn onClick={deleteShop}>Delete</Btn>
+          </ButtonWrapper>
+        ) : null}
       </Wrapper>
     </Container>
   );
